@@ -33,7 +33,7 @@ devices = {'40:A9:CF:3B:13:DB' : 'streaming_stick',
 		   '3C:61:05:D4:A9:B1' : 'smart_pet_feeder',
 		   'EC:B5:FA:85:C1:86' : 'smart_bridge',
 		   '58:24:29:67:AC:F5' : 'smartphone',
-		   '64:03:7F:2F:7F:F9' : 'smartwatch'
+		   '64:03:7F:2F:7F:F9' : 'smartwatch',
 		   '2C:71:FF:76:4D:DE' : 'smart_camera',
 		   'EC:8A:C4:28:47:A1' : 'smart_camera',
 		   '00:F3:81:A1:DA:05' : 'smart_camera',
