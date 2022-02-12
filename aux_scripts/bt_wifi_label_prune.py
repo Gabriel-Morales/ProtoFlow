@@ -3,7 +3,7 @@
 import os
 import sys
 import pandas as pd
-
+import numpy as np
 
 # Only labels bluetooth and wifi for now
 
@@ -42,19 +42,19 @@ devices = {'40:A9:CF:3B:13:DB' : 'streaming_stick',
 		   '14:22:3B:F1:47:C5' : 'smartphone',
 		   '14:22:3B:F1:47:DD' : 'smartphone',
 		   '14:22:3B:F1:47:39' : 'smartphone',
-		   # private mac addresses
+		   
 		   '3A:9C:1D:94:AC:72' : 'smartphone',
 		   '86:B6:25:22:EB:20' : 'smartphone',
 		   '36:78:59:49:BB:4A' : 'smartphone',
 		   '2A:69:93:83:CF:F9' : 'smartphone',
-		   # BT addresses for phones,
+		   
 		   '14:22:3B:F1:47:97' : 'smartphone',
 		   '14:22:3B:F1:47:C4' : 'smartphone',
 		   '14:22:3B:F1:47:DC' : 'smartphone', 
 		   '14:22:3B:F1:47:68' : 'smartphone',
 		   '58:24:29:67:AC:F4' : 'smartphone',
 		   '14:01:52:E3:B9:82' : 'smartphone',
-		   #####,
+		   
 		   'C0:06:C3:9B:D8:8C' : 'smart_camera',
 		   'C0:06:C3:9B:D3:26' : 'smart_camera',
 		   '48:A6:B8:FF:A6:3A' : 'smart_speaker',
@@ -63,7 +63,7 @@ devices = {'40:A9:CF:3B:13:DB' : 'streaming_stick',
 
 consolidated_cap = input('Path to flow table: ')
 
-df = pd.read_csv(consolidated_cap)
+df = pd.read_csv(consolidated_cap, low_memory=False)
 df['label'] = ''
 
 device_keys = devices.keys()
@@ -71,6 +71,8 @@ device_keys = devices.keys()
 # go through and label
 for device in device_keys:
 	df.loc[df['src_mac'] == device.lower(), 'label'] = devices[device]
-	
+
 consolidated_cap = consolidated_cap.split('/')[-1]
+df['label'].replace('', np.nan, inplace=True)
+df.dropna(subset=['label'], inplace=True)
 df.to_csv(f'pruned_{consolidated_cap}', index=False)
