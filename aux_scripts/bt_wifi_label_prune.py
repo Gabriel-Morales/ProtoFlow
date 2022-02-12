@@ -72,4 +72,5 @@ device_keys = devices.keys()
 for device in device_keys:
 	df.loc[df['src_mac'] == device.lower(), 'label'] = devices[device]
 	
-df.to_csv(f'semisupervised_{consolidated_cap}', index=False)
+consolidated_cap = consolidated_cap.split('/')[-1]
+df.to_csv(f'pruned_{consolidated_cap}', index=False)
