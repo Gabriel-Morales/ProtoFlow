@@ -1,4 +1,4 @@
-# ProtoFlow
+# ProtoFlow: Standard Agnostic Flow Table Tool Generation & Auxiliary tools
 Flow metering tools for link-layer traffic on: Bluetooth, Zigbee, WiFi
 
 ## Known Issues:
