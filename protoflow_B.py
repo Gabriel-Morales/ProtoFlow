@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+### LAST OPENED & EDITED: Saturday August 28, 2022
+
+# Tool: Version B - may be consolidated later when time permits. (Allows for multiple entries from flows thresholds)
+
 import os
 import sys
 import pyshark as ps
@@ -9,12 +13,13 @@ import itertools as it
 import traceback
 
 
-FLOW_SEQUENCE_THRESHOLD = 60_000 # threshold for distinct entry (one minute = 60,000 ms)
+FLOW_SEQUENCE_THRESHOLD = 60_000 # threshold for distinct entire (one minute = 60,000 ms)
 
 outfile_name = "packet_flow_out.csv"
 protocol_used = ''
 
-net_flow_table = dict()
+net_flow_table = None
+sub_net_flow_table = dict()
 
 packet_metric_keeper = dict()
 bidir_packet_metric_keeper = dict()
@@ -123,43 +128,31 @@ class FlowPacket:
         self.bidirectional_transmission_rate_ms = metric_obj.transmission_rate_ms
         self.bidirectional_transmission_rate_byte_ms = metric_obj.transmission_rate_bytes_ms
 
- 
 
 
 def parse_packets(capture):
+
     global protocol_used
-
-    try_num = 0
-    try_limit = 50
-
-    while try_num < try_limit:
-        try:
-            pkt_protocols = capture[try_num].frame_info.protocols
-            protocol = determine_protocol(pkt_protocols)
-            if protocol == 0:
-                # bluetooth
-                protocol_used = 'b'
-                break
-            elif protocol == 1:
-                # zigbee
-                protocol_used = 'z'
-                break
-            elif protocol == 2:
-                # wlan
-                protocol_used = 'w'
-                break
-        except:
-            pass
-        try_num += 1
-
-    if try_num >= try_limit:
+    try:
+        pkt_protocols = capture[0].frame_info.protocols
+        protocol = determine_protocol(pkt_protocols)
+        if protocol == 0:
+            # bluetooth
+            protocol_used = 'b'
+        elif protocol == 1:
+            # zigbee
+            protocol_used = 'z'
+        elif protocol == 2:
+            # wlan
+            protocol_used = 'w'
+    except:
+        print('Error accessing packet #0.')
         return
 
-    print(f'Using protocol: {protocol_used}')
     for packet in capture:
-
+        
         # may remove this check later, as it still includes radio-tap/LL info
-        # TCP or UDP indicate LAN data for WIFI.. NOT 802.11 ethernet traffic.
+        # TCP or UDP indicate LAN data in WiFI.. NOT 802.11 ethernet traffic.
         if (find_in_string(packet.frame_info.protocols, "tcp") or find_in_string(packet.frame_info.protocols, "udp")) and protocol == 2:
             continue
 
@@ -179,84 +172,53 @@ def parse_packets(capture):
             
 
     print("Generating table...")
+   
     # Each entry is a (source, dest) or (dest, source) tuple pair.
-    for entry in net_flow_table.keys():
+    for entry in sub_net_flow_table.keys():
 
-        flow_packet = net_flow_table[entry]
+        flow_packet = sub_net_flow_table[entry]
 
         src_oui_key = entry
         reverse_oui_key = (entry[1], entry[0])
 
-
         #src2dst
         if (src_oui_key in packet_metric_keeper) and (len(packet_metric_keeper[src_oui_key]) > 0):
             
-            src2dst_packet_list = packet_metric_keeper[src_oui_key]
-            metric_obj = calculate_quantitative_attributes_from_packet_entry(flow_packet.src2dst_first_seen_time_ms, 
-                                    flow_packet.src2dst_last_seen_time_ms, 
-                                    flow_packet.src2dst_total_packets, 
-                                    flow_packet.src2dst_total_bytes, 
-                                    src2dst_packet_list)
-
-            flow_packet.transfer_calculated_data_to_src2dst(metric_obj)
+            execute_src2dst_attributes(flow_packet, src_oui_key)
 
         #dst2src
         if (reverse_oui_key in packet_metric_keeper) and (len(packet_metric_keeper[reverse_oui_key]) > 0):
 
-            dst2src_packet_list = packet_metric_keeper[reverse_oui_key]
+            execute_dst2src_bidir_attributes(flow_packet,reverse_oui_key)
 
-            bidir_packet_list = None
-            if reverse_oui_key in bidir_packet_metric_keeper:
-                bidir_packet_list = bidir_packet_metric_keeper[reverse_oui_key]
-            else:
-                bidir_packet_list = []
-
-            metric_obj_dst2src = calculate_quantitative_attributes_from_packet_entry(flow_packet.dst2src_first_seen_time_ms, 
-                                    flow_packet.dst2src_last_seen_time_ms, 
-                                    flow_packet.dst2src_total_packets, 
-                                    flow_packet.dst2src_total_bytes, 
-                                    dst2src_packet_list)
-
-            flow_packet.transfer_calculated_data_to_dst2src(metric_obj_dst2src)
-
-            flow_packet.bidirectional_total_bytes = (flow_packet.src2dst_total_bytes + flow_packet.dst2src_total_bytes)
-            flow_packet.bidirectional_total_packets = (flow_packet.src2dst_total_packets + flow_packet.dst2src_total_packets)
-            flow_packet.bidirectional_first_seen_time_ms = flow_packet.src2dst_first_seen_time_ms
-
-            if flow_packet.dst2src_last_seen_time_ms < flow_packet.src2dst_last_seen_time_ms:
-                flow_packet.bidirectional_last_seen_time_ms = flow_packet.src2dst_last_seen_time_ms
-            else:
-                flow_packet.bidirectional_last_seen_time_ms = flow_packet.dst2src_last_seen_time_ms
-                    
-
-            metric_obj_bidirectional = calculate_quantitative_attributes_from_packet_entry(flow_packet.bidirectional_first_seen_time_ms, 
-                                    flow_packet.bidirectional_last_seen_time_ms, 
-                                    flow_packet.bidirectional_total_packets, 
-                                    flow_packet.bidirectional_total_bytes,
-                                    bidir_packet_list)
-
-            flow_packet.transfer_calculated_data_to_bidirec(metric_obj_bidirectional)
+    
+    # concatenates final lists and pushes out the updated one.
+    sub_flow_table_list = create_dataframe_from_flowtable(sub_net_flow_table)
+    
+    # Save the flow table to a CSV file.
+    global net_flow_table
+    net_flow_table = net_flow_table.append(sub_flow_table_list)
+    
+    print(f"Saving flow table to {os.getcwd()}/{outfile_name}_vb.csv")
+    net_flow_table.to_csv(f'{outfile_name}_vb.csv', index=False)
 
 
+def create_dataframe_from_flowtable(flow_table):
     packet_attribute_list = list()
-    for packet in net_flow_table.values():
+    for packet in flow_table.values():
         class_dict = {val: getattr(packet, val) for val in csv_header_names}
         packet_attribute_list.append(class_dict)
     
     # Save the flow table to a CSV file.
-    mainframe = pd.DataFrame(packet_attribute_list, columns=csv_header_names)
-    
-    print(f"Saving flow table to {os.getcwd()}/{outfile_name}_va.csv")
-    mainframe.to_csv(f'{outfile_name}_va.csv', index=False)
-
-
+    ft = pd.DataFrame(packet_attribute_list, columns=csv_header_names)
+    return ft
 
 def calculate_quantitative_attributes_from_packet_entry(first_seen_time_ms, last_seen_time_ms, total_packets, total_bytes, packet_list):
 
     metric_obj = MetricHelper()
 
     metric_obj.total_duration_ms = (last_seen_time_ms - first_seen_time_ms)
-    
+
     if len(packet_list) > 0:
         metric_obj.min_ps = np.min(packet_list)
         metric_obj.max_ps = np.max(packet_list)
@@ -276,7 +238,6 @@ def calculate_quantitative_attributes_from_packet_entry(first_seen_time_ms, last
         metric_obj.transmission_rate_bytes_ms = total_bytes
 
     return metric_obj
-
 
 
 def create_flow_table_from_bt_packet(packet):
@@ -304,7 +265,7 @@ def create_flow_table_from_bt_packet(packet):
     reverse_oui_key = (bt_da, bt_sa)
 
     # slightly skewed
-    curr_time_ms = float(packet.frame_info.time_epoch) * 1_000
+    curr_time_ms = float(packet.frame_info.time_epoch) * 1_000 
 
     compose_table_from_attributes(oui_key, reverse_oui_key, cap_length_bytes, curr_time_ms, bt_sa, bt_da, bt_sa_oui, bt_da_oui)
 
@@ -333,34 +294,24 @@ def create_flow_table_from_zb_packet(packet):
     except:
         pass
 
-    try:
-        zb_sa_8byte = packet.wpan.src64
-        if zb_sa_2byte not in zb_two_byte_dict:
-            zb_two_byte_dict[zb_sa_2byte] = zb_sa_8byte
-    except:
-        pass
-
-
     sa_oui = zb_sa_2byte
     da_oui = zb_da_2byte
     
     zb_sa = zb_sa_2byte
     zb_da = zb_da_2byte
 
-    if sa_oui is None or da_oui is None:
-        return
-
     cap_length_bytes = float(packet.captured_length) 
 
     oui_key = (zb_sa, zb_da)
     reverse_oui_key = (zb_da, zb_sa)
 
-    curr_time_ms = float(packet.frame_info.time_epoch) * 1_000
+    curr_time_ms = float(packet.frame_info.time_epoch) * 1_000 # convert to milliseconds
 
     compose_table_from_attributes(oui_key, reverse_oui_key, cap_length_bytes, curr_time_ms, zb_sa, zb_da, sa_oui, da_oui)
 
 
 def create_flow_table_from_wf_packet(packet):
+
     wlan_sa = packet.wlan.sa
     wlan_da = packet.wlan.da
 
@@ -373,22 +324,25 @@ def create_flow_table_from_wf_packet(packet):
     reverse_oui_key = (wlan_da, wlan_sa)
 
     # slightly skewed
-    curr_time_ms = float(packet.frame_info.time_epoch) * 1_000
+    curr_time_ms = float(packet.frame_info.time_epoch) * 1_000 
 
     compose_table_from_attributes(oui_key, reverse_oui_key, cap_length_bytes, curr_time_ms, wlan_sa, wlan_da, sa_oui, da_oui)
 
 
 def compose_table_from_attributes(oui_key, reverse_oui_key, cap_length_bytes, curr_time_ms, sa, da, sa_oui, da_oui):
-    
-    # dst2src - or the case where they talk to themselves
-    if ((oui_key not in net_flow_table) and (reverse_oui_key in net_flow_table)) or ((oui_key in net_flow_table) and (reverse_oui_key == oui_key)):
 
-        flow_packet = net_flow_table[reverse_oui_key]
+    # dst2src - or the case where they talk to themselves
+    if ((oui_key not in sub_net_flow_table) and (reverse_oui_key in sub_net_flow_table)) or ((oui_key in sub_net_flow_table) and (reverse_oui_key == oui_key)):
+
+        flow_packet = sub_net_flow_table[reverse_oui_key]
         flow_packet.dst2src_total_bytes += cap_length_bytes
         flow_packet.dst2src_total_packets += 1
 
         if flow_packet.dst2src_first_seen_time_ms == 0:
             flow_packet.dst2src_first_seen_time_ms = curr_time_ms
+
+        # time elapsed from when this entry was last seen
+        time_elapsed = (curr_time_ms - flow_packet.dst2src_last_seen_time_ms)
 
         flow_packet.dst2src_last_seen_time_ms = curr_time_ms
 
@@ -399,34 +353,129 @@ def compose_table_from_attributes(oui_key, reverse_oui_key, cap_length_bytes, cu
         if oui_key not in bidir_packet_metric_keeper:
             bidir_packet_metric_keeper[oui_key] = list()
 
+
         packet_metric_keeper[oui_key].append(cap_length_bytes)
         bidir_packet_metric_keeper[oui_key].append(cap_length_bytes)
 
         most_recent_src2dst_cap_len = packet_metric_keeper[reverse_oui_key][-1]
         bidir_packet_metric_keeper[oui_key].append(most_recent_src2dst_cap_len)
 
+
+        # If threshold exceeded, flush from sub & packets and place in netflowtable.
+        if time_elapsed >= FLOW_SEQUENCE_THRESHOLD:
+            execute_dst2src_bidir_attributes(flow_packet, oui_key)
+            save_entry_and_flush_sub_table(flow_packet, packet_metric_keeper, bidir_packet_metric_keeper, oui_key, sa, sa_oui, da, da_oui, cap_length_bytes, curr_time_ms)
+        
         return
 
 
     # Not in table at all, initialize
-    if (oui_key not in net_flow_table) and (reverse_oui_key not in net_flow_table):
-        flow_packet = FlowPacket(sa, sa_oui, da, da_oui, 0, 0, cap_length_bytes, 0, 1, 0, curr_time_ms, 0)
-        flow_packet.protocol = protocol_used
-        net_flow_table[oui_key] = flow_packet
-
-
-        if oui_key not in packet_metric_keeper:
-            packet_metric_keeper[oui_key] = list()
-
-        packet_metric_keeper[oui_key].append(cap_length_bytes)
+    if (oui_key not in sub_net_flow_table) and (reverse_oui_key not in sub_net_flow_table):
+        initialize_entry(oui_key, sa, sa_oui, da, da_oui, cap_length_bytes, curr_time_ms)
         return
 
+
     # src2dst - the oui is in table and reverse is NOT in table.
-    flow_packet = net_flow_table[oui_key]
+    flow_packet = sub_net_flow_table[oui_key]
     flow_packet.src2dst_total_bytes += cap_length_bytes
+
+    #todo: elaborate on this part: depends on which entry was actually last seen.
+    time_elapsed = (curr_time_ms - flow_packet.src2dst_last_seen_time_ms)
+
     flow_packet.src2dst_last_seen_time_ms = curr_time_ms
     flow_packet.src2dst_total_packets += 1
     packet_metric_keeper[oui_key].append(cap_length_bytes)
+
+    # If threshold exceeded, flush from sub & packets and place in netflowtable.
+    if (oui_key in sub_net_flow_table) and (time_elapsed >= FLOW_SEQUENCE_THRESHOLD):
+        
+        execute_src2dst_attributes(flow_packet, oui_key)
+        save_entry_and_flush_sub_table(flow_packet, packet_metric_keeper, bidir_packet_metric_keeper, oui_key)
+        
+
+def save_entry_and_flush_sub_table(flow_packet, packet_metric_keeper, bidir_packet_metric_keeper, oui_key):
+    
+    global net_flow_table
+
+    # save old entry into netflowtable
+    packet_attribute_list = list()
+    class_dict = {val: getattr(flow_packet, val) for val in csv_header_names}
+    
+    packet_attribute_list.append(class_dict)
+
+    ft = pd.DataFrame(packet_attribute_list, columns=csv_header_names)
+    net_flow_table = net_flow_table.append(ft)
+    
+    # flush from table and metric keepers
+    packet_metric_keeper[oui_key] = list()
+    bidir_packet_metric_keeper[oui_key] = list()
+    sub_net_flow_table.pop(oui_key)
+
+
+
+
+def initialize_entry(oui_key, sa, sa_oui, da, da_oui, cap_length_bytes, curr_time_ms):
+
+    flow_packet = FlowPacket(sa, sa_oui, da, da_oui, 0, 0, cap_length_bytes, 0, 1, 0, curr_time_ms, 0)
+    flow_packet.protocol = protocol_used
+    sub_net_flow_table[oui_key] = flow_packet
+
+
+    if oui_key not in packet_metric_keeper:
+        packet_metric_keeper[oui_key] = list()
+
+    packet_metric_keeper[oui_key].append(cap_length_bytes)
+
+
+def execute_src2dst_attributes(flow_packet, src_oui_key):
+    
+    src2dst_packet_list = packet_metric_keeper[src_oui_key]
+    metric_obj = calculate_quantitative_attributes_from_packet_entry(flow_packet.src2dst_first_seen_time_ms, 
+                            flow_packet.src2dst_last_seen_time_ms, 
+                            flow_packet.src2dst_total_packets, 
+                            flow_packet.src2dst_total_bytes, 
+                            src2dst_packet_list)
+
+    flow_packet.transfer_calculated_data_to_src2dst(metric_obj)
+
+
+def execute_dst2src_bidir_attributes(flow_packet, reverse_oui_key):
+
+
+    dst2src_packet_list = packet_metric_keeper[reverse_oui_key]
+
+    bidir_packet_list = None
+    if reverse_oui_key in bidir_packet_metric_keeper:
+        bidir_packet_list = bidir_packet_metric_keeper[reverse_oui_key]
+    else:
+        bidir_packet_list = []
+            
+
+    metric_obj_dst2src = calculate_quantitative_attributes_from_packet_entry(flow_packet.dst2src_first_seen_time_ms, 
+                            flow_packet.dst2src_last_seen_time_ms, 
+                            flow_packet.dst2src_total_packets, 
+                            flow_packet.dst2src_total_bytes, 
+                            dst2src_packet_list)
+
+    flow_packet.transfer_calculated_data_to_dst2src(metric_obj_dst2src)
+
+    flow_packet.bidirectional_total_bytes = (flow_packet.src2dst_total_bytes + flow_packet.dst2src_total_bytes)
+    flow_packet.bidirectional_total_packets = (flow_packet.src2dst_total_packets + flow_packet.dst2src_total_packets)
+    flow_packet.bidirectional_first_seen_time_ms = flow_packet.src2dst_first_seen_time_ms
+
+    if flow_packet.dst2src_last_seen_time_ms < flow_packet.src2dst_last_seen_time_ms:
+        flow_packet.bidirectional_last_seen_time_ms = flow_packet.src2dst_last_seen_time_ms
+    else:
+        flow_packet.bidirectional_last_seen_time_ms = flow_packet.dst2src_last_seen_time_ms
+                    
+
+    metric_obj_bidirectional = calculate_quantitative_attributes_from_packet_entry(flow_packet.bidirectional_first_seen_time_ms, 
+                            flow_packet.bidirectional_last_seen_time_ms, 
+                            flow_packet.bidirectional_total_packets, 
+                            flow_packet.bidirectional_total_bytes,
+                            bidir_packet_list)
+
+    flow_packet.transfer_calculated_data_to_bidirec(metric_obj_bidirectional)
 
     
 def determine_protocol(pkt_protocols):
@@ -471,6 +520,8 @@ print(f"Reading capture file: {file}...")
 
 csv_header_names = create_header_names()
 csv_header_names.reverse()
+
+net_flow_table = pd.DataFrame([], columns=csv_header_names)
 
 try:
 
