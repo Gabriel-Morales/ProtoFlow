@@ -1,3 +1,5 @@
+Use this branch (playground_branch) if you want to mess around with the code, or anything else freely.
+
 # ProtoFlow: Standard Agnostic Flow Table Tool Generation & Auxiliary tools
 Flow metering tools for link-layer traffic on: Bluetooth, Zigbee, WiFi
 
