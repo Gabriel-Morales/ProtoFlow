@@ -36,6 +36,6 @@ Phillips Hue Bridge | smart_bridge
 Pixel 4a | smartphone
 Samsung Galaxy Watch Active | fitness_tracker
 
-Notes: Some of them are odd ducks (e.g., thermometer, bp monitor) as they don't have a greater class to belong to. In general, these abstractions can be anything as long as we have a clear umbrella for a large amount of these. For instanc, we have multiple smartphones, routers, fitness trackers, etc.
+Notes: Some of them are odd ducks (e.g., thermometer, bp monitor) as they don't have a greater class to belong to. In general, these abstractions can be anything as long as we have a clear umbrella for a large amount of these. For instance, we have multiple smartphones, routers, fitness trackers, etc.
 
 
