@@ -1,6 +1,8 @@
 from cProfile import label
+from fileinput import filename
 import pandas as pd
 import os
+
 column_subset = [
     "id",
     "expiration_id",
@@ -90,10 +92,10 @@ column_subset = [
     "label"
 ]
 
-cwd = os.getcwd()
-print(cwd)
+fileName = input("Enter path to file: ")
+
 df = pd.read_csv(
-    "sentinel_labelled_filtered.csv",
+    fileName,
     low_memory=False,
     usecols=column_subset
 )
@@ -135,4 +137,6 @@ dict = {"dropcam" : "ip_camera",
 
 df = df.replace({"label":dict})
 
-df.to_csv("sentinel_labelled_filtered_classified.csv", index=False)
+fileName = fileName[:-4]
+
+df.to_csv((fileName + "_classified.csv"), index=False)
