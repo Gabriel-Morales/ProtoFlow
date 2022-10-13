@@ -37,6 +37,35 @@ PETKIT WiFi Feeder | smart_ped_feeder
 Phillips Hue Bridge | smart_bridge
 Pixel 4a | smartphone
 Samsung Galaxy Watch Active | fitness_tracker
+Dropcam | ip_camera
+Insteon Camera | ip_camera
+Netatomo Welcome | ip_camera
+Samsung Smart Cam | ip_camera
+TPlink Smart Cam | ip_camera
+Withings Smart Baby Monitor | ip_camera
+Macbook | laptop
+Wemo Motion Sensor | motion_sensor
+HP Printer | printer
+Nest Smoke Alarm | smart_alarm
+Blipcare Blood Pressure | smart_bp_monitor
+LiFX Smart Bulb | smart_bulb
+Pixstar Photo Frame | smart_frame
+Smart Things Hub | smart_hub
+TPlink Smart Plug | smart_plugsmart_scale
+Withings Smart Scale | smart_scale
+Echo | smart_speaker
+iHome | smart_speaker
+Triby Speaker | smart_speaker
+Withings Aura Sleep Sensor | smart_speaker
+Wemo Switch | smart_switch
+Android Phone | smartphone
+Iphone | smartphone
+Samsung Galaxy Tab | tablet
+Netatmo Weather Station | weather_station
+Aria Smart Scale | smart_scale
+Dlink Cam | ip_camera
+Dlink Day Cam | ip_camera
+Kasa Smart Plug | smart_plug
 
 Notes: Some of them are odd ducks (e.g., thermometer, bp monitor) as they don't have a greater class to belong to. In general, these abstractions can be anything as long as we have a clear umbrella for a large amount of these. For instance, we have multiple smartphones, routers, fitness trackers, etc.
 
