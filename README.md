@@ -66,6 +66,8 @@ Aria Smart Scale | smart_scale
 Dlink Cam | ip_camera
 Dlink Day Cam | ip_camera
 Kasa Smart Plug | smart_plug
+Samsung Smart TV | smart_tv
+Facebook Portal | smart_display
 
 Notes: Some of them are odd ducks (e.g., thermometer, bp monitor) as they don't have a greater class to belong to. In general, these abstractions can be anything as long as we have a clear umbrella for a large amount of these. For instance, we have multiple smartphones, routers, fitness trackers, etc.
 
