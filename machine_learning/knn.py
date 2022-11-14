@@ -9,6 +9,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.model_selection import train_test_split
 from sklearn import neighbors
+from sklearn.metrics import classification_report
 
 #Read in dataset from ml_datasets 
 df = pd.read_csv("ml_datasets/consolidated_z_b_w.csv")
@@ -68,6 +69,10 @@ knn_recall_score = recall_score(y_arr_test, knn_predictions, average = 'weighted
 knn_precision_score = precision_score(y_arr_test, knn_predictions, average = 'weighted')
 knn_f1_score = f1_score(y_arr_test, knn_predictions, average = 'weighted')
 
+#collect and print class metrics
+class_metrics = classification_report(y_arr_test,knn_predictions)
+print(class_metrics)
+
 #collect metrics
 metrics_file = pd.read_csv("knn_data.csv")
 metrics_data = {'test_number':metrics_file['test_number'].iat[-1] + 1,
@@ -85,7 +90,7 @@ metrics_data = {'test_number':metrics_file['test_number'].iat[-1] + 1,
 #log metrics to a csv file
 metrics_file = metrics_file.append(metrics_data, ignore_index=True)
 print(metrics_file)
-metrics_file.to_csv('knn_data.csv',index=False)
+#metrics_file.to_csv('knn_data.csv',index=False)
 
 #print metrics for validation
 print(f'knn Test Size: {knn_test_size * 100}%')

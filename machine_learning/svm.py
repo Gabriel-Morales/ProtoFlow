@@ -9,6 +9,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.model_selection import train_test_split
 from sklearn import svm
+from sklearn.metrics import classification_report
 
 #Read in dataset from ml_datasets 
 df = pd.read_csv("ml_datasets/consolidated_z_b_w.csv")
@@ -66,6 +67,10 @@ svm_recall_score = recall_score(y_arr_test, svm_predictions, average = 'weighted
 svm_precision_score = precision_score(y_arr_test, svm_predictions, average = 'weighted')
 svm_f1_score = f1_score(y_arr_test, svm_predictions, average = 'weighted')
 
+#collect and print class metrics
+class_metrics = classification_report(y_arr_test,svm_predictions)
+print(class_metrics)
+
 #collect metrics
 metrics_file = pd.read_csv("svm_data.csv")
 metrics_data = {'test_number':metrics_file['test_number'].iat[-1] + 1,
@@ -82,7 +87,7 @@ metrics_data = {'test_number':metrics_file['test_number'].iat[-1] + 1,
 #log metrics to a csv file
 metrics_file = metrics_file.append(metrics_data, ignore_index=True)
 print(metrics_file)
-metrics_file.to_csv('svm_data.csv',index=False)
+#metrics_file.to_csv('svm_data.csv',index=False)
 
 #print metrics for validation
 print(f'SVM Test Size: {svm_test_size * 100}%')

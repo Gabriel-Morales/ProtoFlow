@@ -9,6 +9,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
 
 #Read in dataset from ml_datasets 
 df = pd.read_csv("ml_datasets/consolidated_z_b_w.csv")
@@ -60,6 +61,10 @@ rfc_accuracy_score = accuracy_score(y_arr_test, rfc_predictions)
 rfc_recall_score = recall_score(y_arr_test, rfc_predictions, average = 'weighted')
 rfc_precision_score = precision_score(y_arr_test, rfc_predictions, average = 'weighted')
 rfc_f1_score = f1_score(y_arr_test, rfc_predictions, average = 'weighted')
+
+#collect and print class metrics
+class_metrics = classification_report(y_arr_test,rfc_predictions)
+print(class_metrics)
 
 #collect metrics
 metrics_file = pd.read_csv("random_forest_data.csv")
