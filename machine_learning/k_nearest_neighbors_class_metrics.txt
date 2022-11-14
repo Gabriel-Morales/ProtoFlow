@@ -1,0 +1,17 @@
+                     precision    recall  f1-score   support
+  
+          routers       0.96      0.96      0.96       337
+      smart_locks       1.00      0.57      0.73         7
+smart_pet_feeders       0.33      0.08      0.13        12
+    smart_bridges       0.70      0.76      0.73        58
+         ereaders       0.00      0.00      0.00         3
+    smart_cameras       0.96      0.98      0.97       475
+      smart_plugs       0.86      0.99      0.92        75
+      smart_bulbs       0.87      0.81      0.84        16
+      smart_plugs       0.14      0.12      0.13        17
+ fitness_trackers       0.00      0.00      0.00         1
+   smart_speakers       0.67      0.40      0.50        15
+   smart_switches       0.48      0.74      0.58        19
+ smart_assistants       0.50      0.40      0.44        10
+      smartphones       0.36      0.33      0.34        45
+    smart_vacuums       0.00      0.00      0.00         1
