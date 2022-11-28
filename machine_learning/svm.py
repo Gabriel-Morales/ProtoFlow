@@ -14,17 +14,29 @@ from sklearn.metrics import classification_report
 #Read in dataset from ml_datasets 
 df = pd.read_csv("ml_datasets/consolidated_z_b_w.csv")
 
+#df2 is unencrypted data
+df2 = pd.read_csv("ml_datasets/unswiotan18_labelled_classified_formatted.csv")
+
+df.reset_index(drop=True,inplace=True)
+df2.reset_index(drop=True,inplace=True)
+
+#merge encrypted and unencrypted dataframes
+df = pd.concat([df,df2])
 #Drop rows with value of "empty" as a label
 df = df[df.label != 'empty']
 
 #remove 7500 routers from the input data
+
 df_remove = df.query("label == 'router'").sample(n=7500)
 df = df.drop(df_remove.index, axis=0)
-df = df.reset_index()
 
 #Drop unused categories from input data
-df.drop(['protocol', 'index', 'src_oui', 'src_mac', 'dst_oui', 'dst_mac', 'src2dst_first_seen_time_ms', 'dst2src_first_seen_time_ms', 'src2dst_last_seen_time_ms', 'dst2src_last_seen_time_ms', 'bidirectional_first_seen_time_ms', 'bidirectional_last_seen_time_ms'], axis=1, inplace=True)
+df.drop(['protocol', 'src_oui', 'src_mac', 'dst_oui', 'dst_mac', 'src2dst_first_seen_time_ms', 'dst2src_first_seen_time_ms', 'src2dst_last_seen_time_ms', 'dst2src_last_seen_time_ms','bidirectional_first_seen_time_ms','bidirectional_last_seen_time_ms','dst2src_transmission_rate_bytes_ms'], axis=1, inplace=True)
 
+#df.to_csv('test.csv')
+df = df.dropna()
+#df.to_csv('dropnatest.csv')
+df = df.sample(frac=1).reset_index(drop=True)
 
 #Creating x and y dataframes
 y = df
@@ -32,10 +44,9 @@ x = df.iloc[:,:-1]
 
 #Create dictionary to define device types from encoder_key.csv
 dict = {}
-with open("encoder_key.csv", 'r') as dict_csv:
-    reader = csv.reader(dict_csv)
-    dict = {rows[1]:rows[0] for rows in reader}
-
+    #with open("encoder_key.csv", 'r') as dict_csv:
+    #reader = csv.reader(dict_csv)
+    #dict = {rows[1]:rows[0] for rows in reader}
 y_encoded = y.replace({"label":dict})
 y_encoded = np.array(y_encoded['label'])
 
@@ -86,7 +97,7 @@ metrics_data = {'test_number':metrics_file['test_number'].iat[-1] + 1,
 
 #log metrics to a csv file
 metrics_file = metrics_file.append(metrics_data, ignore_index=True)
-print(metrics_file)
+#print(metrics_file)
 #metrics_file.to_csv('svm_data.csv',index=False)
 
 #print metrics for validation

@@ -1,17 +1,18 @@
-                     precision    recall  f1-score   support
+                     precision    recall  f1-score   support1
   
-          routers       0.96      0.96      0.96       337
-      smart_locks       1.00      0.57      0.73         7
-smart_pet_feeders       0.33      0.08      0.13        12
-    smart_bridges       0.70      0.76      0.73        58
-         ereaders       0.00      0.00      0.00         3
-    smart_cameras       0.96      0.98      0.97       475
-      smart_plugs       0.86      0.99      0.92        75
-      smart_bulbs       0.87      0.81      0.84        16
-      smart_plugs       0.14      0.12      0.13        17
- fitness_trackers       0.00      0.00      0.00         1
-   smart_speakers       0.67      0.40      0.50        15
-   smart_switches       0.48      0.74      0.58        19
- smart_assistants       0.50      0.40      0.44        10
-      smartphones       0.36      0.33      0.34        45
-    smart_vacuums       0.00      0.00      0.00         1
+          routers      &96     &96     &96       337
+      smart_locks      &100     &57     &73         7
+smart_pet_feeders      &33     &08     &13        12
+    smart_bridges      &70     &76     &73        58
+         ereaders      &0     &0     &0         3
+    smart_cameras      &96     &98     &97       475
+      smart_plugs      &86     &99     &92        75
+      smart_bulbs      &87     &81     &84        16
+      smart_plugs      &14     &12     &13        17
+ fitness_trackers      &0     &0     &0         1
+   smart_speakers      &67     &40     &50        15
+   smart_switches      &48     &74     &58        19
+ smart_assistants      &50     &40     &44        10
+      smartphones      &36     &33     &34        45
+    smart_vacuums      &0     &0     &0         1
+ streaming_sticks       0.22      0.23      0.22        22

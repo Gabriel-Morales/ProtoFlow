@@ -33,7 +33,7 @@ Garmin Index S2 Smart Scale | smart_scale
 iRobot Roomba | smart_vacuum
 Kindle | ereader
 Kinsa Quickcare Smart Thermometer | smart_thermometer
-PETKIT WiFi Feeder | smart_ped_feeder
+PETKIT WiFi Feeder | smart_pet_feeder
 Phillips Hue Bridge | smart_bridge
 Pixel 4a | smartphone
 Samsung Galaxy Watch Active | fitness_tracker
@@ -51,7 +51,7 @@ Blipcare Blood Pressure | smart_bp_monitor
 LiFX Smart Bulb | smart_bulb
 Pixstar Photo Frame | smart_frame
 Smart Things Hub | smart_hub
-TPlink Smart Plug | smart_plugsmart_scale
+TPlink Smart Plug | smart_plug
 Withings Smart Scale | smart_scale
 Echo | smart_speaker
 iHome | smart_speaker
