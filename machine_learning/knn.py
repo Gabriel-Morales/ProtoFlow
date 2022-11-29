@@ -14,6 +14,13 @@ from sklearn.metrics import classification_report
 #Read in dataset from ml_datasets 
 df = pd.read_csv("ml_datasets/consolidated_z_b_w.csv")
 
+df_remove = df.query("protocol == 'z'")
+df = df.drop(df_remove.index, axis = 0)
+
+df_remove = df.query("protocol == 'b'")
+df = df.drop(df_remove.index, axis = 0)
+
+
 #df2 is unencrypted data
 df2 = pd.read_csv("ml_datasets/unswiotan18_labelled_classified_formatted.csv")
 

@@ -14,6 +14,12 @@ from sklearn.metrics import classification_report
 #Read in dataset from ml_datasets 
 df = pd.read_csv("ml_datasets/consolidated_z_b_w.csv")
 
+df_remove = df.query("protocol == 'z'")
+df = df.drop(df_remove.index, axis = 0)
+
+df_remove = df.query("protocol == 'b'")
+df = df.drop(df_remove.index, axis = 0)
+
 #df2 is unencrypted data
 df2 = pd.read_csv("ml_datasets/unswiotan18_labelled_classified_formatted.csv")
 
@@ -61,7 +67,7 @@ y_arr_train = np.array(y_train)
 y_arr_test = np.array(y_test)
 
 #select the RFC model and set the values of it
-rfc_max_depth = 11
+rfc_max_depth = None
 rfc = RandomForestClassifier(max_depth=rfc_max_depth, random_state=0)
 
 #Fit the model
