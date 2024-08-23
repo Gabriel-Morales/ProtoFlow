@@ -1,6 +1,12 @@
 # ProtoFlow: Standard Agnostic Flow Table Tool Generation & Auxiliary tools
 Flow metering tools for link-layer traffic on: Bluetooth, Zigbee, WiFi
 
+### TOOL UPDATE NOTICE: 
+
+HI! The most recent version(s) of this tool are available at this repo:
+<h3><a href="https://github.com/Gabriel-Morales/LLM-Paper-Resources/tree/main/ProtoFlow_2023/ProtoFlow-main">LLM-Based Traffic Recognition Repository</a></h3>
+
+
 ## Known Issues:
 1. Auto-detection of the protocol within the frame is defaulted to packet 0. In the event of malformed (or incomplete) packets, this can create a problem where it is not detected and not produce the table. 
 Planned Fix: Find non-malformed packet to detect, or override via flag to force protocol choice.
